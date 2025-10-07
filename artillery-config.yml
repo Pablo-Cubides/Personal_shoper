@@ -1,0 +1,59 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: Warm up
+    - duration: 120
+      arrivalRate: 10
+      name: Load testing
+    - duration: 60
+      arrivalRate: 20
+      name: Stress testing
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+
+scenarios:
+  - name: 'Upload and Analyze Flow'
+    weight: 70
+    flow:
+      - post:
+          url: '/api/upload'
+          formData:
+            file:
+              data: 'fake image data'
+              filename: 'test.jpg'
+              mimetype: 'image/jpeg'
+          capture:
+            json: '$.imageUrl'
+            as: 'imageUrl'
+          capture:
+            json: '$.sessionId'
+            as: 'sessionId'
+      - post:
+          url: '/api/analyze'
+          json:
+            imageUrl: '{{ imageUrl }}'
+            locale: 'es'
+          capture:
+            json: '$.analysis.faceOk'
+            as: 'faceOk'
+
+  - name: 'Rate Limit Test'
+    weight: 20
+    flow:
+      - post:
+          url: '/api/analyze'
+          json:
+            imageUrl: 'https://example.com/test.jpg'
+            locale: 'es'
+
+  - name: 'Error Handling Test'
+    weight: 10
+    flow:
+      - post:
+          url: '/api/analyze'
+          json:
+            imageUrl: 'invalid-url'
+            locale: 'es'

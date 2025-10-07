@@ -1,0 +1,74 @@
+# .gitignore for abstain-app (Next.js / Node)
+# Prevent committing secrets, credentials, logs, build artifacts, node_modules, and editor files
+
+### Node / package
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+### Next.js
+.next/
+out/
+build/
+
+### Production bundles
+dist/
+public/build/
+
+### Env files / secrets
+.env
+.env.*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Secrets folder (do not commit service account JSONs)
+secrets/
+secrets/*.json
+*service-account*.json
+*-credentials.json
+google-credentials.json
+credentials.json
+
+### Logs
+logs/
+*.log
+*.log.*
+smoke_*.txt
+
+### Local uploads / runtime files
+/public/uploads/
+data/generated_images.json
+
+### OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+### IDEs and editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+### TypeScript / build
+*.tsbuildinfo
+
+### Test / coverage
+coverage/
+.nyc_output/
+.vitest/
+
+### Misc
+*.tmp
+*.temp
+*.bak
+~*
+
+# Optional: keep a .gitkeep in public/uploads if you want the folder tracked
+# !public/uploads/.gitkeep
