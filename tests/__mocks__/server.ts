@@ -3,6 +3,21 @@ import { setupServer } from 'msw/node';
 
 // Mock API responses for testing
 export const handlers = [
+  // Generic GET/OPTIONS handlers for local test server probes (healthchecks / preflight)
+  http.options('http://localhost:3001/*', async () => {
+    return HttpResponse.json({}, { status: 204 });
+  }),
+  http.get('http://localhost:3001/*', async () => {
+    // return a minimal 200 so health checks succeed during integration guard
+    return HttpResponse.json({ ok: true });
+  }),
+  // Specific root handler - some probes request GET / without host
+  http.options('/', async () => {
+    return HttpResponse.json({}, { status: 204 });
+  }),
+  http.get('/', async () => {
+    return HttpResponse.json({ ok: true });
+  }),
   // Upload endpoint
   http.post('/api/upload', async () => {
     return HttpResponse.json({

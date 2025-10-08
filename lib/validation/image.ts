@@ -169,7 +169,7 @@ export async function isFullBodyCandidate(buffer: Buffer): Promise<boolean> {
     if (height / Math.max(1, width) < 1.2) return false;
     if (height < Math.max(800, APP_CONFIG.images.MIN_HEIGHT)) return false;
     return true;
-  } catch (err) {
+  } catch {
     return false;
   }
 }
