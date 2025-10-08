@@ -30,7 +30,7 @@ Request JSON
 
 Response 200
 ```json
-{ "analysis": { "faceOk": true, "pose": "frontal", "hair": { ... }, "beard": { ... }, "suggestedText": "...", "advisoryText": "..." }, "workingUrl": "..." }
+{ "analysis": { "bodyOk": true, "pose": "frontal", "clothing": { ... }, "suggestedText": "...", "advisoryText": "..." }, "workingUrl": "..." }
 ```
 
 Errors: cualquier fallo en el análisis se registra y la ruta puede devolver 200 con `analysis` fallback (ver `lib/ai/gemini.ts`).
@@ -70,7 +70,7 @@ Errors:
 
 
 ## Contratos internos relevantes
-- `FaceAnalysis` (ver `lib/ai/gemini.ts`) — la forma exacta que `analyze` devuelve y que `iterate` usa parcialmente.
+- `BodyAnalysis` / `FaceAnalysis` (ver `lib/ai/gemini.ts`) — la forma exacta que `analyze` devuelve y que `iterate` usa parcialmente.
 - `EditIntent` (ver `lib/ai/nanobanana.ts`) — describe cambios deseados: `change[]`, `instruction`, `preserveIdentity`, `outputSize`, `watermark`.
 
 

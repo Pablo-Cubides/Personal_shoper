@@ -3,12 +3,11 @@ import { describe, it, expect, vi } from 'vitest';
 // Mock the AI services
 vi.mock('../../lib/ai/gemini', () => ({
   analyzeImageWithGemini: vi.fn().mockResolvedValue({
-    faceOk: true,
+    bodyOk: true,
     pose: 'frontal',
-    hair: { style: 'corto' },
-    beard: { style: 'stubble' },
-    suggestedText: 'Mock analysis result',
-    advisoryText: 'Mock advice'
+    clothing: { top: 'camisa', bottom: 'pantalón' },
+    suggestedText: 'Mock outfit suggestion',
+    advisoryText: 'Mock outfit advice'
   })
 }));
 

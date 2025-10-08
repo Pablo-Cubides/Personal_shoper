@@ -38,7 +38,7 @@ import { Part } from '@google/generative-ai';
       imageUrl = { inlineData: { data: base64, mimeType: r.headers.get('content-type') || 'image/jpeg' } };
     }
 
-    const prompt = 'Make the hair slightly shorter while preserving identity';
+  const prompt = 'Adjust the outfit and colors while preserving identity; suggest a structured jacket and neutral palette.';
     console.log('Calling generateContent...');
     const call = await model.generateContent([prompt, imageUrl]);
     console.log('Raw call result:', call);

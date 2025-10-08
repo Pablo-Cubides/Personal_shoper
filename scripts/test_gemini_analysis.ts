@@ -55,33 +55,30 @@ import path from 'path';
       mimeType = 'image/jpeg';
     }
 
-    const prompt = `Analiza esta foto de retrato y proporciona un análisis detallado profesional como barbero experto. 
+    const prompt = `Analiza esta foto (preferiblemente de cuerpo entero) y proporciona un análisis profesional enfocado en ropa, combinación de colores y accesorios.
 
 IMPORTANTE: Responde SOLO con JSON válido, sin markdown ni explicaciones adicionales.
 
 Evalúa:
-1. ¿La foto es adecuada? (frontal, una sola persona, buena iluminación)
-2. Forma del rostro y características
-3. Estilo actual de cabello (longitud, color, textura)
-4. Barba actual (si tiene o no)
-5. Recomendaciones profesionales específicas para cabello y barba
+1. ¿La foto es adecuada? (cuerpo entero preferible, una sola persona, buena iluminación)
+2. Tipo de cuerpo y postura
+3. Ropa actual visible (categorías: camisa, pantalón, vestido, chaqueta, calzado)
+4. Combinación de colores y coordinación de prendas
+5. Recomendaciones profesionales específicas: outfit sugerido, colores, y accesorios
 
 Responde en este formato JSON exacto:
 {
-  "faceOk": true/false,
+  "bodyOk": true/false,
   "pose": "frontal" o "ladeado" o "incompleto",
-  "hair": {
-    "length": "short" o "medium" o "long",
-    "color": "descripción del color",
-    "density": "low" o "medium" o "high"
-  },
-  "beard": {
-    "present": true/false,
-    "style": "descripción si tiene barba",
-    "density": "low" o "medium" o "high"
+  "clothing": {
+    "top": "descripcion",
+    "bottom": "descripcion",
+    "outer": "descripcion opcional",
+    "shoes": "descripcion",
+    "colors": ["lista de colores dominantes"]
   },
   "lighting": "good" o "fair" o "poor",
-  "advisoryText": "Análisis profesional completo en español con recomendaciones detalladas de corte, barba, y estilo. Incluye emojis y formato claro.",
+  "advisoryText": "Análisis profesional con recomendaciones de outfit, colores y accesorios.",
   "suggestedText": "Texto corto con la recomendación principal"
 }`;
 
@@ -110,21 +107,17 @@ Responde en este formato JSON exacto:
       const analysis = JSON.parse(cleanText);
 
       console.log('✅ ANÁLISIS PARSEADO CORRECTAMENTE:\n');
-      console.log('🔍 Rostro OK:', analysis.faceOk ? '✅ Sí' : '❌ No');
+      console.log('🔍 Adecuada para análisis (bodyOk):', analysis.bodyOk ? '✅ Sí' : '❌ No');
       console.log('📐 Pose:', analysis.pose);
-      console.log('💇 Cabello:');
-      console.log(`   - Longitud: ${analysis.hair.length}`);
-      console.log(`   - Color: ${analysis.hair.color}`);
-      console.log(`   - Densidad: ${analysis.hair.density}`);
-      console.log('🧔 Barba:');
-      console.log(`   - Presente: ${analysis.beard.present ? 'Sí' : 'No'}`);
-      if (analysis.beard.present) {
-        console.log(`   - Estilo: ${analysis.beard.style}`);
-        console.log(`   - Densidad: ${analysis.beard.density}`);
-      }
+      console.log('� Ropa detectada:');
+      console.log(`   - Top: ${analysis.clothing?.top || 'N/A'}`);
+      console.log(`   - Bottom: ${analysis.clothing?.bottom || 'N/A'}`);
+      console.log(`   - Outer: ${analysis.clothing?.outer || 'N/A'}`);
+      console.log(`   - Shoes: ${analysis.clothing?.shoes || 'N/A'}`);
+      console.log(`   - Colores dominantes: ${(analysis.clothing?.colors || []).join(', ')}`);
       console.log('💡 Iluminación:', analysis.lighting);
       console.log('\n📝 RECOMENDACIÓN PROFESIONAL:\n');
-      console.log(analysis.advisoryText);
+      console.log(analysis.advisoryText || analysis.suggestedText || 'N/A');
       console.log('\n✅ PRUEBA EXITOSA - Gemini Vision está funcionando correctamente\n');
 
     } catch {

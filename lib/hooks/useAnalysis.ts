@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { FaceAnalysis } from '../types/ai';
+import type { BodyAnalysis } from '../types/ai';
 import { uploadImage, analyzeImage, iterateEdit, ApiError } from '../api-client';
 
 export type AnalysisState = 'idle' | 'uploading' | 'analyzing' | 'generating' | 'complete' | 'error';
@@ -17,7 +17,7 @@ export function useAnalysis() {
   const [editedUrl, setEditedUrl] = useState<string | null>(null);
   const [publicId, setPublicId] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [analysis, setAnalysis] = useState<FaceAnalysis | null>(null);
+  const [analysis, setAnalysis] = useState<BodyAnalysis | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,9 +39,11 @@ export function useAnalysis() {
       setState('analyzing');
       addMessage('system', 'Analizando tu foto...');
       const analyzeData = await analyzeImage(uploadData.imageUrl, 'es');
-      setAnalysis(analyzeData.analysis);
+      // Get BodyAnalysis directly (no normalization needed)
+      const analysis = analyzeData.analysis as BodyAnalysis;
+      setAnalysis(analysis);
       
-      if (analyzeData.analysis?.faceOk) {
+      if (analysis.bodyOk) {
         const suggestion = analyzeData.analysis.suggestedText || 'Recomendación generada';
         addMessage('assistant', suggestion);
 
@@ -52,7 +54,7 @@ export function useAnalysis() {
           originalImageUrl: uploadData.imageUrl,
           userText: suggestion,
           prevPublicId: uploadData.publicId,
-          analysis: analyzeData.analysis,
+          analysis: analysis,
         });
 
         setEditedUrl(editData.editedUrl);

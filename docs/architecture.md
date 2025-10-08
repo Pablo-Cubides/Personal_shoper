@@ -25,7 +25,7 @@ Principales capas:
 
 - `app/api/analyze/route.ts`
   - Encapsula la llamada a `lib/ai/gemini.analyzeImageWithGemini`.
-  - Devuelve un objeto `analysis` con `faceOk`, `hair`, `beard`, `suggestedText`, etc.
+  - Devuelve un objeto `analysis` con `bodyOk`, `pose`, `clothing`, `suggestedText`, etc.
 
 - `app/api/iterate/route.ts`
   - Flujo: moderación -> mapUserTextToIntent -> `editWithNanoBanana` -> fetch resultado -> watermark -> subir
@@ -44,7 +44,7 @@ Principales capas:
 
 - `lib/ai/gemini.ts` (análisis)
   - Implementa `analyzeImageWithGemini`, que intenta usar Gemini SDK y, en su defecto, la API de Vision como fallback para detección básica.
-  - Devuelve `FaceAnalysis` (interfaz bien definida).
+  - Devuelve `BodyAnalysis` o `FaceAnalysis` (para compatibilidad legacy).
 
 ## Decisiones de diseño clave
 

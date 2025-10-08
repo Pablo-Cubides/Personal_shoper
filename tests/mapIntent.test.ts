@@ -3,8 +3,11 @@ import { mapUserTextToIntent } from '../lib/ai/gemini'
 
 describe('mapUserTextToIntent', () => {
   it('parses basic requests', () => {
-    const r = mapUserTextToIntent('Quiero el cabello más corto y una barba stubble', 'es')
-    expect(r.change.some(c => c.type === 'hair_length' && c.value === 'short')).toBe(true)
-    expect(r.change.some(c => c.type === 'beard_style' && c.value === 'stubble')).toBe(true)
+    const r = mapUserTextToIntent('Quiero una chaqueta más ajustada y colores más neutros', 'es')
+    // Should detect clothing_fit (structured, regular, etc.) and clothing_item
+    expect(r.change.some(c => c.type === 'clothing_fit')).toBe(true)
+    expect(r.change.some(c => c.type === 'clothing_item')).toBe(true)
+    // Note: color detection may or may not work depending on NLP availability
+    // so we only check for clothing-related changes
   })
 })

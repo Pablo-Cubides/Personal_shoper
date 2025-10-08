@@ -22,19 +22,32 @@ export const handlers = [
 
     return HttpResponse.json({
       analysis: {
-        faceOk: true,
+        // Body-focused analysis (new schema)
+        bodyOk: true,
         pose: 'frontal',
-        hair: {
-          style: 'corto',
-          color: 'negro',
-          condition: 'buena'
+        bodyType: 'rectangle',
+        proportions: { shoulders: 'balanced', waist: 'average', hips: 'balanced' },
+        clothing: {
+          top: 'camisa blanca',
+          bottom: 'pantalón oscuro',
+          outer: 'chaqueta estructurada',
+          fit: 'regular',
+          colors: ['blanco', 'negro']
         },
-        beard: {
-          style: 'stubble',
-          length: 'corto'
-        },
-        suggestedText: 'Te recomendamos un corte moderno con barba recortada.',
-        advisoryText: 'Considera mantener el cabello bien hidratado.'
+        skinTone: 'medio',
+        lighting: 'good',
+        suggestedText: 'Te recomendamos una chaqueta estructurada y pantalón recto.',
+        advisoryText: 'Considera prendas que equilibren tus proporciones y paletas neutras para un look equilibrado.',
+        recommended: [
+          {
+            category: 'outfit',
+            recommendation: 'Chaqueta estructurada con camisa neutra y pantalón recto',
+            colors: ['neutro'],
+            reason: 'Equilibra la silueta y aporta estructura'
+          }
+        ],
+
+        // Clean body-focused analysis only (no legacy fields)
       },
       workingUrl: 'https://res.cloudinary.com/test/analyzed-image.jpg'
     });

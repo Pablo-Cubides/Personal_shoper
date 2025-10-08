@@ -16,7 +16,7 @@ export function Header() {
             <div>
               <h1 className="text-lg font-semibold leading-none">Perfil Pro</h1>
               <p className="text-xs text-[var(--color-text-tertiary)] leading-none mt-0.5">
-                perfil que destaca sin exagerar
+                Asesoría de prendas, paletas y fit para tu cuerpo
               </p>
             </div>
           </div>

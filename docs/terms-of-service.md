@@ -1,4 +1,4 @@
-# Términos de Servicio - Análisis de Rostro AI
+# Términos de Servicio - Asesor de Estilo Corporal AI
 
 **Última actualización:** 3 de Octubre, 2025  
 **Vigencia:** Al usar el servicio, acepta estos términos
@@ -7,7 +7,7 @@
 
 ## 1. Aceptación de los Términos
 
-Al acceder y utilizar este servicio de análisis facial con IA ("el Servicio"), usted acepta estar legalmente vinculado por estos Términos de Servicio ("Términos").
+Al acceder y utilizar este servicio de análisis de imagen con IA ("el Servicio"), usted acepta estar legalmente vinculado por estos Términos de Servicio ("Términos").
 
 **Si no está de acuerdo, NO utilice el Servicio.**
 
@@ -17,9 +17,9 @@ Al acceder y utilizar este servicio de análisis facial con IA ("el Servicio"), 
 
 ### 2.1 Funcionalidades
 El Servicio proporciona:
-- ✅ Análisis de imágenes faciales mediante inteligencia artificial
-- ✅ Recomendaciones personalizadas de estilo de cabello y barba
-- ✅ Visualización de transformaciones sugeridas
+- ✅ Análisis de imágenes (preferiblemente cuerpo entero) mediante inteligencia artificial
+- ✅ Recomendaciones personalizadas de ropa, colores y accesorios
+- ✅ Visualización de transformaciones sugeridas (outfit)
 - ✅ Comparación antes/después
 
 ### 2.2 Limitaciones
@@ -44,7 +44,7 @@ El Servicio NO:
 - ❌ Intentar realizar ingeniería inversa del sistema
 - ❌ Automatizar solicitudes (scraping, bots)
 - ❌ Abusar del servicio con uso excesivo
-- ❌ Cargar contenido inapropiado:
+-- ❌ Cargar contenido inapropiado:
   - Pornografía o contenido sexual explícito
   - Violencia gráfica
   - Contenido de odio o discriminatorio

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test - Personal Shopper</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    h1 { color: #333; margin-top: 0; }
+    h2 { color: #0070f3; border-bottom: 2px solid #0070f3; padding-bottom: 10px; }
+    button {
+      background: #0070f3;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    button:hover { background: #0051cc; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    .result {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 15px;
+      white-space: pre-wrap;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .success { color: #0070f3; }
+    .error { color: #e00; }
+    .loading { color: #f90; }
+    input[type="file"] {
+      padding: 10px;
+      border: 2px dashed #ccc;
+      border-radius: 6px;
+      width: 100%;
+      cursor: pointer;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🛍️ Personal Shopper - Test de Flujo</h1>
+    <p>Prueba del análisis de ropa y edición de imágenes con IA</p>
+  </div>
+
+  <div class="card">
+    <h2>1️⃣ Verificar Variables de Entorno</h2>
+    <button onclick="testEnv()">Verificar ENV</button>
+    <div id="envResult" class="result" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h2>2️⃣ Subir Imagen</h2>
+    <input type="file" id="imageFile" accept="image/*" onchange="handleFileSelect(event)">
+    <div id="uploadPreview"></div>
+    <button id="uploadBtn" onclick="uploadImage()" disabled>Subir Imagen</button>
+    <div id="uploadResult" class="result" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h2>3️⃣ Analizar Imagen</h2>
+    <button id="analyzeBtn" onclick="analyzeImage()" disabled>Analizar con Gemini</button>
+    <div id="analyzeResult" class="result" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h2>4️⃣ Editar Imagen (Cambiar Ropa)</h2>
+    <input type="text" id="editInstruction" placeholder="Ej: Sugerir outfit con chaqueta azul y pantalón negro" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px;">
+    <button id="editBtn" onclick="editImage()" disabled>Editar con IA</button>
+    <div id="editResult" class="result" style="display:none;"></div>
+  </div>
+
+  <script>
+    let uploadedImageUrl = '';
+    let analysisData = null;
+    let sessionId = 'test_' + Date.now();
+
+    function log(elementId, message, type = 'info') {
+      const el = document.getElementById(elementId);
+      el.style.display = 'block';
+      el.className = 'result ' + type;
+      el.textContent = message;
+    }
+
+    async function testEnv() {
+      log('envResult', 'Verificando variables de entorno...', 'loading');
+      try {
+        const res = await fetch('/api/debug/env');
+        const data = await res.json();
+        log('envResult', JSON.stringify(data, null, 2), 'success');
+      } catch (error) {
+        log('envResult', 'Error: ' + error.message, 'error');
+      }
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          document.getElementById('uploadPreview').innerHTML = 
+            `<img src="${e.target.result}" alt="Preview">`;
+          document.getElementById('uploadBtn').disabled = false;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    async function uploadImage() {
+      const fileInput = document.getElementById('imageFile');
+      const file = fileInput.files[0];
+      if (!file) {
+        log('uploadResult', 'Por favor selecciona una imagen primero', 'error');
+        return;
+      }
+
+      log('uploadResult', 'Subiendo imagen...', 'loading');
+      document.getElementById('uploadBtn').disabled = true;
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.message || 'Error al subir');
+        }
+
+        const data = await res.json();
+        uploadedImageUrl = data.optimizedUrl || data.canonicalUrl || data.imageUrl;
+        log('uploadResult', `✅ Imagen subida exitosamente:\n${JSON.stringify(data, null, 2)}`, 'success');
+        document.getElementById('analyzeBtn').disabled = false;
+      } catch (error) {
+        log('uploadResult', '❌ Error: ' + error.message, 'error');
+      } finally {
+        document.getElementById('uploadBtn').disabled = false;
+      }
+    }
+
+    async function analyzeImage() {
+      if (!uploadedImageUrl) {
+        log('analyzeResult', 'Primero debes subir una imagen', 'error');
+        return;
+      }
+
+      log('analyzeResult', 'Analizando imagen con Gemini AI...', 'loading');
+      document.getElementById('analyzeBtn').disabled = true;
+
+      try {
+        const res = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageUrl: uploadedImageUrl,
+            locale: 'es',
+            sessionId: sessionId
+          })
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.message || 'Error en análisis');
+        }
+
+        analysisData = await res.json();
+        log('analyzeResult', `✅ Análisis completado:\n${JSON.stringify(analysisData, null, 2)}`, 'success');
+        document.getElementById('editBtn').disabled = false;
+        document.getElementById('editInstruction').value = analysisData.suggestedText || 'Sugerir outfit elegante';
+      } catch (error) {
+        log('analyzeResult', '❌ Error: ' + error.message, 'error');
+      } finally {
+        document.getElementById('analyzeBtn').disabled = false;
+      }
+    }
+
+    async function editImage() {
+      if (!uploadedImageUrl || !analysisData) {
+        log('editResult', 'Primero debes subir y analizar una imagen', 'error');
+        return;
+      }
+
+      const instruction = document.getElementById('editInstruction').value;
+      if (!instruction) {
+        log('editResult', 'Por favor ingresa una instrucción', 'error');
+        return;
+      }
+
+      log('editResult', 'Editando imagen con IA (esto puede tomar 30-60 segundos)...', 'loading');
+      document.getElementById('editBtn').disabled = true;
+
+      try {
+        const res = await fetch('/api/iterate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            originalImageUrl: uploadedImageUrl,
+            userText: instruction,
+            analysis: analysisData,
+            sessionId: sessionId
+          })
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || error.message || 'Error en edición');
+        }
+
+        const data = await res.json();
+        const resultText = `✅ Imagen editada exitosamente:\n${JSON.stringify(data, null, 2)}`;
+        log('editResult', resultText, 'success');
+        
+        if (data.editedUrl) {
+          document.getElementById('editResult').innerHTML += 
+            `<br><br><strong>Imagen Editada:</strong><br><img src="${data.editedUrl}" alt="Edited">`;
+        }
+      } catch (error) {
+        log('editResult', '❌ Error: ' + error.message, 'error');
+      } finally {
+        document.getElementById('editBtn').disabled = false;
+      }
+    }
+
+    // Auto-test env al cargar
+    window.onload = () => {
+      testEnv();
+    };
+  </script>
+</body>
+</html>

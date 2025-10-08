@@ -84,9 +84,10 @@ describe('Unified tests (unit + integration guard)', () => {
   // Unit test: map user text to intent (always runs)
   describe('Intent parsing (unit)', () => {
     it('parses basic requests', () => {
-      const r = mapUserTextToIntent('Quiero el cabello más corto y una barba stubble', 'es')
-      expect(r.change.some(c => c.type === 'hair_length' && c.value === 'short')).toBe(true)
-      expect(r.change.some(c => c.type === 'beard_style' && c.value === 'stubble')).toBe(true)
+      const r = mapUserTextToIntent('Quiero una chaqueta más ajustada y colores neutros', 'es')
+      expect(r.change.some(c => c.type === 'clothing_fit' || c.type === 'clothing_item')).toBe(true)
+      expect(r.change.length).toBeGreaterThan(0)
+      expect(r.preserveIdentity).toBe(true)
     })
   })
 
@@ -137,7 +138,8 @@ describe('Unified tests (unit + integration guard)', () => {
           expect(anResponse.status).toBe(200);
           const anData = anResponse.data;
           expect(anData).toHaveProperty('analysis');
-          expect(typeof anData.analysis.faceOk).toBe('boolean');
+          // BodyAnalysis should be present; keep legacy faceOk check for compatibility
+          expect(typeof anData.analysis.bodyOk === 'boolean' || typeof anData.analysis.faceOk === 'boolean').toBe(true);
         });
       });
 

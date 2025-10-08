@@ -4,6 +4,7 @@ import { appendLog } from '../../../lib/ai/logger';
 import { enforceRateLimit, getRequestIdentifier } from '../../../lib/rate-limit';
 import { enforceCredits, consumeCredits, getActionCost } from '../../../lib/credits';
 import { validateImageUrl } from '../../../lib/validation/image';
+import { moderateImage } from '../../../lib/moderation';
 import { getCached, setCached, generateAnalysisCacheKey } from '../../../lib/cache';
 import { getImageBuffer, calculateImageHash } from '../../../lib/validation/image';
 import { extractErrorInfo } from '../../../lib/errors';
@@ -48,6 +49,18 @@ export async function POST(req: Request): Promise<Response> {
         },
         { status: 400 }
       );
+    }
+
+    // 2b. Moderation (block NSFW, minors, multi-face early)
+    try {
+      const mod = await moderateImage(imageUrl);
+      if (!mod.ok) {
+        await appendLog({ phase: 'api.analyze.moderation_block', reason: mod.reason, imageUrl: APP_CONFIG.compliance.PRIVACY_MODE ? '[redacted]' : imageUrl });
+        return NextResponse.json({ error: 'IMAGE_BLOCKED', message: 'Image not allowed for analysis', reason: mod.reason }, { status: 400 });
+      }
+    } catch (e: unknown) {
+      // If moderation fails, allow analysis to proceed but log warning
+      await appendLog({ phase: 'api.analyze.moderation_error', error: String(e) });
     }
 
     // 3. Check cache

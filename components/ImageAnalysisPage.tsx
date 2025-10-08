@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
-import type { FaceAnalysis } from '../lib/types/ai'
+// No longer need FaceAnalysis - now using only BodyAnalysis
 
 type Message = { from: 'user' | 'assistant' | 'system'; text: string }
 
@@ -66,7 +66,7 @@ export default function ImageAnalysisPage() {
     // analyze
     const aRes = await fetch('/api/analyze', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ imageUrl: j.imageUrl, locale: 'es' }) })
     const aJson = await aRes.json()
-    const suggestion = aJson.analysis?.suggestedText || 'We suggest a stubble for greater definition.'
+      const suggestion = aJson.analysis?.suggestedText || 'We suggest an outfit suggestion to enhance proportions.'
     setMessages(m => [...m, { from: 'assistant', text: suggestion }])
 
     // first edit
@@ -74,7 +74,7 @@ export default function ImageAnalysisPage() {
     setLoading(false)
   }
 
-  async function generateEdit(userText: string, imageUrlParam?: string, prevPublicId?: string | null, sessionIdParam?: string | null, analysisParam?: FaceAnalysis | undefined) {
+  async function generateEdit(userText: string, imageUrlParam?: string, prevPublicId?: string | null, sessionIdParam?: string | null, analysisParam?: unknown) {
     if (!originalUrl && !imageUrlParam) return
     setLoading(true)
     const body = { sessionId: sessionIdParam || sessionId, originalImageUrl: imageUrlParam || originalUrl, userText, prevPublicId, analysis: analysisParam }
@@ -116,7 +116,7 @@ export default function ImageAnalysisPage() {
       {/* Left side: Chat Interface */}
       <div className="w-1/3 bg-card border-r border-border flex flex-col">
         <div className="p-4 border-b border-border">
-          <h1 className="text-2xl font-bold">AI Barber</h1>
+          <h1 className="text-2xl font-bold">Asesor de Estilo</h1>
         </div>
         <div className="flex-1 p-4 overflow-y-auto">
           {messages.map((m, i) => (
@@ -144,9 +144,9 @@ export default function ImageAnalysisPage() {
         {!originalUrl ? (
           <div className="text-center">
             <h2 className="text-4xl font-bold mb-4">Upload Your Photo</h2>
-            <p className="text-slate-400 mb-8 text-lg">Get a realistic preview of a new hair or beard style.</p>
+            <p className="text-slate-400 mb-8 text-lg">Get a realistic preview of a suggested outfit and styling for your photo.</p>
             <button
-              className="bg-primary text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-300 text-xl"
+              className="bg-primary text-white font-bold py-3 px-6 rounded-lg hover:bg-[var(--color-accent-primary-hover)] transition-colors duration-300 text-xl"
               onClick={() => fileRef.current?.click()}
               disabled={loading}
             >

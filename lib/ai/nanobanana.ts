@@ -5,13 +5,9 @@ import type { EditIntent } from '../types/ai'
 
 type UnknownRecord = Record<string, unknown>
 
-const NANOBANANA_URL = process.env.NANOBANANA_URL || ''
-const NANOBANANA_KEY = process.env.NANOBANANA_API_KEY || process.env.GEMINI_API_KEY || ''
-
-// Accept different environment variable names used in this project
-const GEMINI_API_KEY_VAR = process.env.GEMINI_API_KEY || ''
-const GEMINI_REST_URL = process.env.GEMINI_REST_URL || ''
-const GOOGLE_IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || process.env.GOOGLE_IMAGE_MODEL || process.env.GEMINI_MODEL || 'imagen-3.0-generate-001'
+// IMPORTANTE: No usar constantes de módulo para env vars porque se evalúan al importar.
+// Next.js carga .env.local DESPUÉS de que los módulos se importan en algunos casos.
+// Siempre leer process.env directamente en tiempo de ejecución.
 
 // Timeout configurations with progressive timeouts
 const GENERATION_TIMEOUT = parseInt(process.env.AI_GENERATION_TIMEOUT || '120000', 10) // 120s for generation/editing
@@ -36,6 +32,15 @@ async function uploadIfNeeded(result: unknown, filenameBase = 'nanobanana') {
 // Primary exported function used by API routes
 export async function editWithNanoBanana(imageUrl: string, intent: EditIntent): Promise<{ editedUrl: string; note?: string; publicId?: string | null }> {
   await appendLog({ phase: 'nanobanana.start', imageUrl, intent: intent?.instruction || 'N/A' })
+  
+  // Log runtime env visibility para debugging
+  await appendLog({
+    phase: 'nanobanana.env_check',
+    geminiApiKeyPresent: !!process.env.GEMINI_API_KEY,
+    geminiRestUrlPresent: !!process.env.GEMINI_REST_URL,
+    nanobananaUrlPresent: !!process.env.NANOBANANA_URL,
+    googleImageModel: process.env.GOOGLE_IMAGE_MODEL || process.env.GEMINI_MODEL || 'default'
+  })
   
   // Helper: call a Gemini-style REST editor (expects JSON { imageUrl, intent })
   async function callGeminiEditorViaRest(url: string, apiKey: string | undefined) {
@@ -75,7 +80,7 @@ export async function editWithNanoBanana(imageUrl: string, intent: EditIntent): 
           const genAI = new GoogleGenerativeAI(apiKey)
           
           // Try Imagen model first (if available)
-          const modelName = GOOGLE_IMAGE_MODEL
+          const modelName = process.env.GOOGLE_IMAGE_MODEL || process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp'
           await appendLog({ phase: 'nanobanana.google.sdk_attempt', model: modelName, attempt })
           
           try {
@@ -92,9 +97,10 @@ export async function editWithNanoBanana(imageUrl: string, intent: EditIntent): 
               ? String(intent.instruction) 
               : (intent && intent.change ? JSON.stringify(intent.change) : 'Edit image professionally')
             
+            // Full-body / clothing editing prompt
             const prompt = intent.locale === 'es'
-              ? `Edita esta foto de retrato de forma profesional. ${instruction}. IMPORTANTE: Mantén la identidad y el rostro de la persona intactos. Solo modifica el estilo del cabello y la barba facial según lo solicitado. Conserva la iluminación natural y los tonos de piel. Genera un retrato editado de alta calidad.`
-              : `Edit this portrait photo professionally. ${instruction}. IMPORTANT: Maintain the person's identity and face intact. Only modify hair style and facial hair (beard) as requested. Keep natural lighting and skin tones. Generate a high-quality edited portrait.`
+              ? `Edita esta foto (preferiblemente cuerpo entero) de forma profesional. ${instruction}. IMPORTANTE: Mantén la identidad de la persona. Modifica la ropa, colores y accesorios según lo solicitado, respetando proporciones y textura. Conserva la iluminación natural y los tonos de piel. Genera una imagen editada de alta calidad con el outfit sugerido.`
+              : `Edit this photo (preferably full-body) professionally. ${instruction}. IMPORTANT: Maintain the person's identity. Modify clothing, colors and accessories as requested, preserving proportions and texture. Keep natural lighting and skin tones. Generate a high-quality edited image with the suggested outfit.`
             
             await appendLog({ phase: 'nanobanana.google.sdk_generating', model: modelName, promptLength: prompt.length, attempt })
             
@@ -199,10 +205,18 @@ export async function editWithNanoBanana(imageUrl: string, intent: EditIntent): 
     throw lastError || new Error('Unexpected end of retry loop')
   }
 
-  // Try in preferred order: GOOGLE_API_KEY (Gemini), GEMINI_REST_URL (custom proxy), then NANOBANANA_URL
-  if (GEMINI_API_KEY_VAR) {
+  // Re-evaluate environment variables at runtime (important when the
+  // module was imported before .env.local was loaded). Use these runtime
+  // values for deciding which editor backend to call.
+  const runtimeGeminiApiKey = process.env.GEMINI_API_KEY || ''
+  const runtimeGeminiRestUrl = process.env.GEMINI_REST_URL || ''
+  const runtimeNANOBANANA_URL = process.env.NANOBANANA_URL || ''
+  const runtimeNANOBANANA_KEY = process.env.NANOBANANA_API_KEY || process.env.GEMINI_API_KEY || ''
+
+  // Try in preferred order: GEMINI API key (SDK) -> GEMINI_REST_URL -> legacy NanoBanana
+  if (runtimeGeminiApiKey) {
     try {
-      return await callGoogleImageEdit(GEMINI_API_KEY_VAR)
+      return await callGoogleImageEdit(runtimeGeminiApiKey)
     } catch (geminiError: unknown) {
       const error = geminiError as Error
       await appendLog({ 
@@ -215,9 +229,9 @@ export async function editWithNanoBanana(imageUrl: string, intent: EditIntent): 
     }
   }
 
-  if (GEMINI_REST_URL) {
+  if (runtimeGeminiRestUrl) {
     try {
-      return await callGeminiEditorViaRest(GEMINI_REST_URL, undefined)
+      return await callGeminiEditorViaRest(runtimeGeminiRestUrl, undefined)
     } catch (restError: unknown) {
       const error = restError as Error
       await appendLog({ 
@@ -230,18 +244,19 @@ export async function editWithNanoBanana(imageUrl: string, intent: EditIntent): 
     }
   }
 
-  if (NANOBANANA_URL && NANOBANANA_KEY) {
+  if (runtimeNANOBANANA_URL && runtimeNANOBANANA_KEY) {
     try {
       await appendLog({ phase: 'nanobanana.request.legacy', imageUrl, intent })
       const body = { imageUrl, intent }
       const controller = new AbortController()
+      const GENERATION_TIMEOUT = parseInt(process.env.AI_GENERATION_TIMEOUT || '120000', 10)
       const timeoutId = setTimeout(() => controller.abort(), GENERATION_TIMEOUT)
       
-      const resp = await fetch(NANOBANANA_URL, { 
+      const resp = await fetch(runtimeNANOBANANA_URL, { 
         method: 'POST', 
         headers: { 
           'Content-Type': 'application/json', 
-          'Authorization': `Bearer ${NANOBANANA_KEY}` 
+          'Authorization': `Bearer ${runtimeNANOBANANA_KEY}` 
         }, 
         body: JSON.stringify(body),
         signal: controller.signal
@@ -280,9 +295,9 @@ export async function editWithNanoBanana(imageUrl: string, intent: EditIntent): 
     imageUrl, 
     intent,
     failureReasons: {
-      geminiSdk: GEMINI_API_KEY_VAR ? 'Failed after retries with exponential backoff' : 'Not configured',
-      restApi: GEMINI_REST_URL ? 'Failed' : 'Not configured', 
-      legacyService: (NANOBANANA_URL && NANOBANANA_KEY) ? 'Failed with timeout' : 'Not configured'
+      geminiSdk: runtimeGeminiApiKey ? 'Failed after retries with exponential backoff' : 'Not configured',
+      restApi: runtimeGeminiRestUrl ? 'Failed' : 'Not configured', 
+      legacyService: (runtimeNANOBANANA_URL && runtimeNANOBANANA_KEY) ? 'Failed with timeout' : 'Not configured'
     },
     note: 'No remote image editor available (Gemini/REST/legacy all failed)' 
   })

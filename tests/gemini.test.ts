@@ -31,8 +31,8 @@ describe('analyzeImageWithGemini (unit, mocked)', () => {
     mockFetch.default = m
 
     const res = await gemini.analyzeImageWithGemini('https://example.com/test.jpg', 'es')
-    expect(res).toHaveProperty('faceOk')
-    expect(res).toHaveProperty('hair')
+    expect(res).toHaveProperty('bodyOk')
+    expect(res).toHaveProperty('clothing')
     expect(typeof res.suggestedText === 'string').toBe(true)
   })
 })

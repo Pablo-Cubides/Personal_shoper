@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Input } from './ui/Input'
 import { AnalysisCard } from './features/AnalysisCard'
 import { uploadImage, analyzeImage, iterateEdit, ApiError } from '../lib/api-client'
-import type { FaceAnalysis } from '../lib/types/ai'
+import type { BodyAnalysis } from '../lib/types/ai'
 
 type Message = {
   id: string
@@ -24,7 +24,7 @@ export default function AnalysisWorkspace() {
   const [editedUrl, setEditedUrl] = useState<string | null>(null)
   const [publicId, setPublicId] = useState<string | null>(null)
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [analysis, setAnalysis] = useState<FaceAnalysis | null>(null)
+  const [analysis, setAnalysis] = useState<BodyAnalysis | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   
@@ -53,18 +53,20 @@ async function handleUpload(file: File) {
 
     // Analyze
     setState('analyzing');
-    addMessage('system', 'Analizando tu foto...');
+    addMessage('system', 'Analizando cuerpo y prendas...');
     const analyzeData = await analyzeImage(uploadData.imageUrl, 'es');
-    setAnalysis(analyzeData.analysis);
+    // Get clean BodyAnalysis (no legacy normalization needed)
+    const analysis = analyzeData.analysis as BodyAnalysis;
+    setAnalysis(analysis);
     
-    if (analyzeData.analysis?.faceOk) {
+    if (analysis.bodyOk) {
       const suggestion = analyzeData.analysis.suggestedText || 'Recomendación generada';
       addMessage('assistant', suggestion);
 
       // Generate first edit
       setState('generating');
       addMessage('system', 'Generando edición...');
-      await generateEdit(suggestion, uploadData.imageUrl, uploadData.publicId, uploadData.sessionId, analyzeData.analysis);
+  await generateEdit(suggestion, uploadData.imageUrl, uploadData.publicId, uploadData.sessionId, analysis);
       setState('complete');
     } else {
       setState('error');
@@ -83,7 +85,7 @@ async function generateEdit(
   imageUrl?: string,
   prevId?: string | null,
   sessId?: string | null,
-  analysisParam?: FaceAnalysis | null
+  analysisParam?: BodyAnalysis | null
 ) {
   try {
     const payload = {
@@ -202,7 +204,7 @@ async function generateEdit(
                     }`} />
                     <span className="text-[var(--color-text-secondary)]">
                       {state === 'uploading' && 'Subiendo imagen...'}
-                      {state === 'analyzing' && 'Analizando rostro...'}
+                        {state === 'analyzing' && 'Analizando cuerpo y prendas...'}
                       {state === 'generating' && 'Generando edición...'}
                       {state === 'complete' && 'Listo'}
                       {state === 'error' && 'Error'}
@@ -273,8 +275,7 @@ async function generateEdit(
                 </div>
                 <h2 className="text-2xl font-semibold mb-2">Sube tu foto para comenzar</h2>
                 <p className="text-[var(--color-text-secondary)] max-w-md mb-8">
-                  Obtén recomendaciones profesionales y una edición realista de tu perfil. 
-                  La imagen se eliminará automáticamente en 24 horas.
+                  Obtén recomendaciones profesionales sobre prendas y combinaciones. La imagen se eliminará automáticamente en 24 horas.
                 </p>
                 <Button variant="primary" size="lg" onClick={() => fileRef.current?.click()}>
                   Subir Foto

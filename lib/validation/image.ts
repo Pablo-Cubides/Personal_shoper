@@ -154,3 +154,22 @@ export async function getImageBuffer(imageUrl: string): Promise<Buffer> {
   const arrayBuffer = await response.arrayBuffer();
   return Buffer.from(arrayBuffer);
 }
+
+/**
+ * Heuristic: detect if an image is likely a full-body photo based on dimensions.
+ * This is a best-effort check and not a replacement for model-based detection.
+ */
+export async function isFullBodyCandidate(buffer: Buffer): Promise<boolean> {
+  try {
+    const probe = await import('probe-image-size');
+    const dimensions = probe.default.sync(buffer);
+    if (!dimensions) return false;
+    const { width, height } = dimensions;
+    // Prefer tall images for full body; require at least 1.2x height/width and reasonable height
+    if (height / Math.max(1, width) < 1.2) return false;
+    if (height < Math.max(800, APP_CONFIG.images.MIN_HEIGHT)) return false;
+    return true;
+  } catch (err) {
+    return false;
+  }
+}

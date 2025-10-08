@@ -21,9 +21,9 @@ export default function Page() {
   const [isDragging, setIsDragging] = useState(false);
 
   const suggestions = [
-    "Crear un estilo de barba que alargue mi rostro",
-    "Sugerir peinados de bajo mantenimiento para cabello ondulado",
-    "¿Qué productos necesito para una barba saludable y bien cuidada?",
+    "Sugerir un outfit casual para un cuerpo tipo rectángulo",
+    "Recomendar combinaciones de colores para un look de oficina",
+    "Qué tipo de corte de ropa favorece mi silueta y proporciones?",
   ];
 
   // Helper: perform /api/iterate with retries for transient 503 errors
@@ -118,14 +118,17 @@ export default function Page() {
       });
       const analyzeData = await analyzeRes.json();
 
-      if (analyzeData.error || !analyzeData.analysis?.faceOk) {
-        setMessages((m) => [...m, { from: "system", text: analyzeData.analysis?.advisoryText || "No se pudo analizar la imagen correctamente." }]);
+      // Prefer bodyOk for the new flow, fall back to faceOk for legacy images
+      const analysis = analyzeData.analysis || {};
+      const ok = (analysis as any).bodyOk ?? (analysis as any).faceOk;
+      if (analyzeData.error || !ok) {
+        setMessages((m) => [...m, { from: "system", text: analysis.advisoryText || "No se pudo analizar la imagen correctamente." }]);
         setStep("upload");
         setLoading(false);
         return;
       }
 
-  const advisory = analyzeData.analysis.advisoryText || "";
+  const advisory = analyzeData.analysis?.advisoryText || "";
 
       // Pequeño delay para evitar problemas de concurrencia con analyze
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -299,20 +302,20 @@ export default function Page() {
         <div className="chat-shell">
           <div className="chat-header">
             <h1 className="chat-title">Tu Asesor de Estilo Personal</h1>
-            <p className="chat-sub">Recibe consejos sobre cortes de barba, peinados y más.</p>
+            <p className="chat-sub">Recibe recomendaciones sobre prendas, combinaciones y cómo potenciar tu silueta.</p>
           </div>
 
-          <div className="p-6">
+          <div className="p-6 pl-12">
             <div
               ref={dropZoneRef}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`p-8 rounded-lg text-center ${isDragging ? "border-primary bg-primary/5" : ""}`}
+              className={`p-8 rounded-lg ${isDragging ? "border-primary bg-primary/5" : ""}`}
             >
-              <h2 className="mb-2 text-lg font-semibold">Sube tu foto para una asesoría</h2>
-              <p className="mb-4 text-sm text-muted-foreground">Recomendamos que sea una foto de frente con buena iluminación.</p>
-              <div className="flex items-center justify-center gap-4">
+              <h2 className="mb-2 text-lg font-semibold">Sube tu foto para una asesoría de outfit</h2>
+              <p className="mb-4 text-sm text-muted-foreground">Recomendamos que sea una foto que muestre el cuerpo completo con buena iluminación para mejores recomendaciones.</p>
+              <div className="flex items-center justify-start gap-4">
                 <button onClick={handleUploadClick} disabled={loading} className="btn-accent">{loading ? "Procesando..." : "Seleccionar Imagen"}</button>
                 <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
               </div>
@@ -340,7 +343,7 @@ export default function Page() {
       <div className="chat-shell">
         <div className="chat-header">
           <h1 className="chat-title">Tu Asesor de Estilo Personal</h1>
-          <p className="chat-sub">Recibe consejos sobre cortes de barba, peinados y más.</p>
+          <p className="chat-sub">Recibe recomendaciones sobre prendas, combinaciones y estilo personal.</p>
         </div>
 
         <div className="messages">

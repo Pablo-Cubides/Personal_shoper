@@ -3,15 +3,16 @@
 import React from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/Card'
 import { Badge } from '../ui/Badge'
-import type { FaceAnalysis } from '../../lib/types/ai'
+import type { BodyAnalysis } from '../../lib/types/ai'
 
 interface AnalysisCardProps {
-  analysis: FaceAnalysis | null
+  analysis: BodyAnalysis | null
   className?: string
 }
 
 export function AnalysisCard({ analysis, className = '' }: AnalysisCardProps) {
   if (!analysis) return null
+  const body = analysis as BodyAnalysis;
 
   return (
     <Card className={className}>
@@ -31,41 +32,41 @@ export function AnalysisCard({ analysis, className = '' }: AnalysisCardProps) {
         {/* Analysis Details */}
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)]">
-            <div className="text-xs text-[var(--color-text-tertiary)] mb-1">Corte</div>
+            <div className="text-xs text-[var(--color-text-tertiary)] mb-1">Prenda superior</div>
             <div className="text-sm font-medium text-[var(--color-text-primary)] capitalize">
-              {analysis.hair?.length || '—'}
+              {body.clothing?.top || '—'}
             </div>
           </div>
 
           <div className="p-3 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)]">
-            <div className="text-xs text-[var(--color-text-tertiary)] mb-1">Barba</div>
+            <div className="text-xs text-[var(--color-text-tertiary)] mb-1">Prenda inferior</div>
             <div className="text-sm font-medium text-[var(--color-text-primary)] capitalize">
-              {analysis.beard?.style || (analysis.beard?.present ? 'Presente' : 'No detectada')}
+              {body.clothing?.bottom || '—'}
             </div>
           </div>
 
           <div className="p-3 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)]">
-            <div className="text-xs text-[var(--color-text-tertiary)] mb-1">Color</div>
+            <div className="text-xs text-[var(--color-text-tertiary)] mb-1">Ajuste / Fit</div>
             <div className="text-sm font-medium text-[var(--color-text-primary)] capitalize">
-              {analysis.hair?.color || '—'}
+              {body.clothing?.fit || '—'}
             </div>
           </div>
 
           <div className="p-3 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)]">
             <div className="text-xs text-[var(--color-text-tertiary)] mb-1">Iluminación</div>
             <div className="text-sm font-medium text-[var(--color-text-primary)] capitalize">
-              {analysis.lighting || '—'}
+              {body.lighting || '—'}
             </div>
           </div>
         </div>
 
         {/* Status Badges */}
         <div className="flex flex-wrap gap-2 mt-4">
-          <Badge variant={analysis.faceOk ? 'success' : 'danger'}>
-            {analysis.faceOk ? 'Análisis completo' : 'Requiere revisión'}
+          <Badge variant={body.bodyOk ? 'success' : 'danger'}>
+            {body.bodyOk ? 'Análisis completo' : 'Requiere revisión'}
           </Badge>
           <Badge variant="secondary">
-            {analysis.pose || 'Desconocido'}
+            {body.pose || 'Desconocido'}
           </Badge>
         </div>
       </CardContent>

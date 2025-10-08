@@ -1,19 +1,19 @@
-# Política de Privacidad - Análisis de Rostro AI
+# Política de Privacidad - Asesor de Estilo Corporal AI
 
 **Última actualización:** 3 de Octubre, 2025
 
 ## 1. Introducción
 
-Esta aplicación de análisis facial con inteligencia artificial ("el Servicio") procesa imágenes de rostros para proporcionar recomendaciones personalizadas de estilo de cabello y barba.
+Esta aplicación de análisis de imagen con inteligencia artificial ("el Servicio") procesa fotografías —preferiblemente de cuerpo entero— para proporcionar recomendaciones personalizadas de ropa, colores y accesorios.
 
 ## 2. Información que Recopilamos
 
-### 2.1 Datos Proporcionados Directamente
-- **Imágenes faciales**: Fotografías que usted carga voluntariamente
+- ### 2.1 Datos Proporcionados Directamente
+- **Imágenes**: Fotografías (preferiblemente de cuerpo entero) que usted carga voluntariamente
 - **Datos de sesión**: ID de sesión temporal, dirección IP, navegador
 
-### 2.2 Datos Generados Automáticamente
-- **Análisis facial**: Características detectadas (forma del rostro, tipo de cabello, barba)
+- ### 2.2 Datos Generados Automáticamente
+- **Análisis corporal/estilo**: Características detectadas (tipo de cuerpo, postura, ropa actual, combinación de colores)
 - **Recomendaciones**: Sugerencias personalizadas generadas por IA
 - **Logs técnicos**: Registros de errores y rendimiento del sistema
 
@@ -25,9 +25,9 @@ Esta aplicación de análisis facial con inteligencia artificial ("el Servicio")
 ## 3. Cómo Usamos su Información
 
 ### 3.1 Propósitos Principales
-1. **Análisis de Imagen**: Procesamiento con Google Gemini AI para analizar características faciales
-2. **Generación de Recomendaciones**: Creación de sugerencias personalizadas de estilo
-3. **Visualización**: Generación de imágenes editadas mostrando estilos sugeridos
+1. **Análisis de Imagen**: Procesamiento con Google Gemini AI para analizar características corporales y la ropa visible
+2. **Generación de Recomendaciones**: Creación de sugerencias personalizadas de outfit, colores y accesorios
+3. **Visualización**: Generación de imágenes editadas mostrando sugerencias de vestimenta
 4. **Mejora del Servicio**: Análisis anónimo de métricas de uso
 
 ### 3.2 Base Legal (GDPR)
@@ -36,8 +36,8 @@ Esta aplicación de análisis facial con inteligencia artificial ("el Servicio")
 
 ## 4. Compartir Información con Terceros
 
-### 4.1 Proveedores de Servicios
-- **Google Gemini AI**: Procesamiento de análisis facial e imagen
+- ### 4.1 Proveedores de Servicios
+- **Google Gemini AI**: Procesamiento de análisis de imagen y generación de recomendaciones
 - **Cloudinary**: Almacenamiento temporal de imágenes
 - **Upstash Redis** (opcional): Caché de resultados
 

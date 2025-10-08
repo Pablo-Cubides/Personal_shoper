@@ -1,4 +1,4 @@
-import type { FaceAnalysis, IteratePayload } from './types/ai';
+import type { BodyAnalysis, IteratePayload } from './types/ai';
 
 // Define a generic error structure for API responses
 export type ApiError = {
@@ -15,7 +15,7 @@ export type UploadResponse = {
 
 // Type for the successful analysis response
 export type AnalyzeResponse = {
-  analysis: FaceAnalysis;
+  analysis: BodyAnalysis;
   workingUrl: string;
   cached: boolean;
 };

@@ -1,6 +1,6 @@
-# 💈 Abstain — Análisis de Rostro AI v2.0
+# 💈 Abstain — Asesor de Estilo Corporal v2.0
 
-Aplicación Next.js + TypeScript de análisis facial con IA que proporciona recomendaciones personalizadas de estilo de cabello y barba utilizando Google Gemini AI.
+Aplicación Next.js + TypeScript de análisis de imagen que proporciona recomendaciones personalizadas de ropa, colores y accesorios usando Google Gemini AI.
 
 **🎉 Versión 2.0 - Fases 1-3 Completadas:**
 - ✅ **Estabilización:** Error handling robusto, circuit breaker, rate limiting, validación
@@ -67,7 +67,7 @@ npm install
 npm run dev
 ```
 
-4. Abrir http://localhost:3000 y subir una imagen. Los endpoints principales son `/api/upload`, `/api/analyze`, `/api/iterate`.
+4. Abrir http://localhost:3000 y subir una imagen (preferible cuerpo entero). Los endpoints principales son `/api/upload`, `/api/analyze`, `/api/iterate`.
 
 
 ## Archivos clave

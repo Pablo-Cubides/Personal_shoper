@@ -16,8 +16,8 @@ export function Footer() {
               <span className="text-base font-semibold">Perfil Pro</span>
             </div>
             <p className="text-sm text-[var(--color-text-secondary)] max-w-xs">
-              Recomendaciones profesionales de barba y cabello con inteligencia artificial. 
-              Perfil que destaca sin exagerar.
+              Recomendaciones profesionales de ropa, colores y accesorios con inteligencia artificial.
+              Ideas de outfit que potencian tu silueta.
             </p>
           </div>
           
