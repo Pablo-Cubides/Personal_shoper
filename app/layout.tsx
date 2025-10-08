@@ -24,7 +24,11 @@ const poppins = Poppins({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className="light">
-      <head />
+      <head>
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="apple-touch-icon" href="/logo.svg" />
+        <meta name="theme-color" content="#ffffff" />
+      </head>
       <body className={`${inter.variable} ${poppins.variable} font-sans antialiased bg-white`}>{children}</body>
     </html>
   );

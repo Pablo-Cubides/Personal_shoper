@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60">
+  <rect width="200" height="60" rx="12" fill="#ffffff"/>
+  <g transform="translate(12,6)">
+    <rect width="48" height="48" rx="10" fill="#2563eb" />
+    <text x="24" y="34" font-family="Poppins, Inter, sans-serif" font-weight="800" font-size="28" text-anchor="middle" fill="white">PP</text>
+  </g>
+  <text x="80" y="36" font-family="Poppins, Inter, sans-serif" font-weight="700" font-size="20" fill="#0f172a">Perfil Pro</text>
+</svg>
