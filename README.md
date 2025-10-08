@@ -21,72 +21,190 @@ npm install
 npm run setup
 
 # O configurar manualmente:
-cp .env.example .env.local
-# Editar .env.local con tus credenciales
+# Personal_shoper
 
-# 3. Validar y ejecutar
-npm run validate-config
-npm run dev
-```
+Tu Asesor de Estilo Personal — aplicación Next.js para recibir recomendaciones de outfit a partir de una foto.
 
-Abre [http://localhost:3000](http://localhost:3000) 🎉
+Este repositorio contiene la aplicación web (Next.js App Router + TypeScript) que permite a los usuarios subir una foto, analizarla (visión por computador), generar una imagen editada (servicio externo) y recibir recomendaciones de estilo.
 
 ---
 
-## 📖 Documentación v2.0
+## Tabla de contenidos
 
-### 🆕 Nuevas Guías
-- **[📋 Implementación Completa](./docs/IMPLEMENTATION.md)** - Setup y configuración detallada
-- **[📊 Resumen de Cambios](./docs/SUMMARY.md)** - Estado de implementación
-- **[📦 Dependencias Opcionales](./docs/OPTIONAL-DEPENDENCIES.md)** - Redis, Sentry, testing
-- **[🔐 Política de Privacidad](./docs/privacy-policy.md)** - GDPR/CCPA compliant
-- **[📜 Términos de Servicio](./docs/terms-of-service.md)** - Legal completo
+- [Quickstart](#quickstart)
+- [Arquitectura](#arquitectura)
+- [Rutas API importantes](#rutas-api-importantes)
+- [Variables de entorno](#variables-de-entorno)
+- [Tests y mocks (MSW)](#tests-y-mocks-msw)
+- [Accesibilidad y UX](#accesibilidad-y-ux)
+- [Despliegue](#despliegue)
+- [Contribuir](#contribuir)
+- [Seguridad y buenas prácticas](#seguridad-y-buenas-pr%C3%A1cticas)
+- [Changelog resumido](#changelog-resumido)
+- [Documentación extendida (docs/)](#documentaci%C3%B3n-extendida-docs)
 
-### 📚 Documentación Original
+---
 
-## Contenidos
-- `docs/architecture.md` — visión general y responsabilidades de cada componente
-- `docs/api.md` — contrato de los endpoints (payloads, respuestas, códigos de estado, error modes)
-- `docs/diagrams.md` — diagramas Mermaid (flujos y secuencias)
-- `docs/development.md` — guía para desarrollo local, pruebas y smoke tests
-- `docs/deployment.md` — guía de despliegue y consideraciones de seguridad
+## Quickstart
 
+Requisitos:
+- Node.js (>=18)
+- pnpm / npm
+- Variables de entorno en `.env.local` (ver sección abajo)
 
-## Quickstart (local)
-1. Copia `.env.local.example` a `.env.local` y rellena las variables necesarias (Cloudinary, GEMINI keys si las tienes).
-2. Instala dependencias:
+Instala dependencias:
 
-```powershell
-cd "D:\Mis aplicaciones\Analisis rostro\abstain-app"
+```bash
+pnpm install
+# o
 npm install
 ```
 
-3. Levanta el servidor de desarrollo:
+En desarrollo:
 
-```powershell
+```bash
+pnpm dev
+# o
 npm run dev
 ```
 
-4. Abrir http://localhost:3000 y subir una imagen (preferible cuerpo entero). Los endpoints principales son `/api/upload`, `/api/analyze`, `/api/iterate`.
+Compilar producción:
 
+```bash
+pnpm build
+pnpm start
+```
 
-## Archivos clave
-- `app/(public)/page.tsx` — UI principal (chat-like) y slider Before/After
-- `app/api/upload/route.ts` — recibe subida y llama a `lib/storage.uploadToStorage`
-- `app/api/analyze/route.ts` — llama a `lib/ai/gemini.analyzeImageWithGemini`
-- `app/api/iterate/route.ts` — orquesta edición: moderación -> editWithNanoBanana -> fetch edited -> watermark -> upload
-- `lib/ai/nanobanana.ts` — orquestador de ediciones: Gemini SDK -> Gemini REST proxy -> NanoBanana legacy; devuelve 503 si no hay editores
-- `lib/storage.ts` — Cloudinary integration + local fallback; sanitiza `public_id`
-- `data/generated_images.json` — registro local de imágenes generadas (para limpieza y auditoría)
-- `logs/ai_calls.log` — registro de llamadas AI/ediciones para diagnóstico
+Correr tests (Vitest):
 
-
-## Notas rápidas de diseño
-- No hay fallback a edición local (p. ej. Sharp) — si ningún editor remoto está disponible, la API responde 503 con mensaje claro.
-- `uploadToStorage` sanitiza `public_id` para evitar espacios/char problemáticos en Cloudinary.
-- `iterate` intenta borrar el `prevPublicId` exacto y una variante sanitizada (espacios -> `_`) para limpieza retrocompat.
-
+```bash
+pnpm test
+```
 
 ---
 
-Lee `docs/architecture.md` y `docs/api.md` para detalles técnicos y diagramas.
+## Arquitectura
+
+Resumen de alto nivel:
+
+- Frontend: Next.js (App Router, React + TypeScript). Código principal de la interfaz en `app/(public)/page.tsx`, estilos globales en `app/globals.css`.
+- Backend: Rutas API dentro de `app/api/*` que realizan:
+	- `/api/upload`: recibe la imagen desde el cliente y la guarda/procesa (p.ej. Cloudinary).
+	- `/api/analyze`: ejecuta análisis por visión (Google Vision u otro) para validar la foto y producir recomendaciones preliminares.
+	- `/api/iterate`: solicita al servicio de generación de imágenes la imagen editada (puede ser un servicio externo de edición/AI).
+	- `/api/moderate`: (opcional) punto para moderación de contenido.
+- Tests: Vitest + MSW (mocks) para simular backend en pruebas.
+- Utilidades: `lib/validation` y otros helpers para validaciones y transformaciones.
+
+Puntos de entrada importantes:
+- `app/(public)/page.tsx` — UI principal: subida, drag & drop, barra de progreso, chat y control de conversación.
+- `app/globals.css` — tokens de diseño, progress bar, drop-zone y animaciones.
+- `tests/__mocks__/server.ts` — handlers MSW para los tests.
+
+---
+
+## Rutas API importantes
+
+- POST `/api/upload`
+	- FormData con `file` (imagen). Retorna JSON:
+		```json
+		{ "imageUrl": "https://...", "sessionId": "...", "publicId": "..." }
+		```
+	- Errores: devuelve `error` y código HTTP adecuado.
+
+- POST `/api/analyze`
+	- Body: `{ imageUrl, locale }` — devuelve análisis, `analysis.advisoryText`, flags `bodyOk`/`faceOk`, y `suggestedText`.
+
+- POST `/api/iterate`
+	- Body: `{ sessionId, originalImageUrl, userText, prevPublicId, analysis }` — solicita la imagen editada.
+	- Responde con `{ editedUrl, publicId, note }` o `error` si falla.
+
+Consulta `docs/APIS.md` para ejemplos y detalles de formato.
+
+---
+
+## Variables de entorno
+
+Ejemplo de `.env.local` (no almacenar en VCS):
+
+```
+NODE_ENV=development
+NEXT_PUBLIC_MAX_IMAGE_SIZE_MB=10
+GEMINI_API_KEY=...
+GEMINI_MODEL=...
+GOOGLE_VISION_SERVICE_ACCOUNT_PATH=path/to/service-account.json
+BETTERSTACK_TOKEN=...
+CLOUDINARY_URL=...
+```
+
+Notas:
+- `NEXT_PUBLIC_MAX_IMAGE_SIZE_MB` controla la validación cliente de tamaño. El servidor siempre debe validar también.
+- `GEMINI_API_KEY` / `GEMINI_MODEL` se usan si hay integraciones de modelo.
+- Evita exponer claves privadas en el cliente.
+
+---
+
+## Tests y mocks (MSW)
+
+- Ejecutar tests: `pnpm test` (Vitest)
+- MSW se usa para interceptar peticiones HTTP durante tests. Revisa `tests/__mocks__/server.ts` si agregas handlers nuevos.
+- Problema conocido: MSW advertirá sobre requests sin handlers (p. ej. OPTIONS/GET de health checks); añade handlers genéricos para silenciarlos en `tests/__mocks__/server.ts`.
+
+---
+
+## Accesibilidad y UX
+
+Este proyecto implementa varias mejoras de accesibilidad y UX:
+- Indicadores de carga multi-fase y `aria-live` para anunciar cambios (subiendo, analizando, generando).
+- `role="log"`/`aria-live="polite"` en la lista de mensajes.
+- Teclas: `Escape` aborta uploads; `Enter` envía un prompt (desde textarea sin shift).
+- Focus visibles y animaciones suaves.
+
+Consulta `docs/ACCESSIBILITY.md` para checklist y cómo validar.
+
+---
+
+## Despliegue
+
+Este es un proyecto Next.js convencional. Para desplegar:
+
+- Vercel: conectar el repo y configurar variables de entorno.
+- Docker: construir con `npm run build` y servir con `npm start`.
+
+Asegúrate de configurar los secretos en la plataforma de despliegue y los endpoints externos (Cloudinary, servicios de edición y visión).
+
+---
+
+## Contribuir
+
+Lee `docs/CONTRIBUTING.md` para guía de estilo, branch workflow y cómo crear PRs. En resumen:
+- Trabaja en ramas feature/ o fix/ y abre PR hacia `main`.
+- Incluye tests y actualiza documentación cuando sea necesario.
+
+---
+
+## Seguridad y buenas prácticas
+
+- Valida siempre el tamaño y tipo de archivo en el servidor, no confíes sólo en la validación cliente.
+- Aplica rate-limiting y límites por sesión (ya existe una limitación en memoria para pruebas; en producción usar Redis/IP bucket).
+- No subir secretos a GitHub. Usa variables de entorno en la plataforma de despliegue.
+
+---
+
+## Changelog resumido (últimos cambios)
+
+- Implementada barra de progreso multi-fase (uploading → analyzing → generating) con animación indeterminada y ARIA live.
+- Subida por XHR para capturar progreso y admitir aborto con `Escape`.
+- Zona de drag & drop con highlight.
+- Gating de sugerencias hasta que exista la `editedUrl`.
+- Mejora de accesibilidad (aria, role=log, focus-visible) y animaciones para mensajes.
+- Botón "Empezar de nuevo" para resetear conversación.
+- Estándar de espaciado y skeleton placeholders para imágenes.
+
+---
+
+## Documentación extendida (docs/)
+
+Hay una carpeta `docs/` con documentación extendida: `APIS.md`, `ACCESSIBILITY.md`, `DEPLOYMENT.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`.
+
+Si quieres que amplíe alguna sección (por ejemplo, sample payloads más extendidos, diagramas de arquitectura o scripts de CI), dime cuál y lo agrego.
